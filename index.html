@@ -143,7 +143,8 @@
 </head>
 <body>
 
-  <audio id="bg-music" src="Soñé Zoé.mp3" loop preload="auto"></audio>
+  <!-- Codificación del archivo de audio para evitar errores de ruta en Chrome -->
+  <audio id="bg-music" src="So%C3%B1%C3%A9%20Zo%C3%A9.mp3" loop preload="auto"></audio>
 
   <div id="main-title">Feliz Día de las Flores Amarillas 🌻✨</div>
   <div id="instruction">Toca para abrir 🌻📍</div>
@@ -230,18 +231,15 @@
       camera.lookAt(0, 0, 0);
     }
 
-    // FOTO DEL CENTRO: Recorte circular perfecto sin distorsión
     function createCenterPhoto() {
       const textureLoader = new THREE.TextureLoader();
       textureLoader.setCrossOrigin('anonymous');
       
-      // Puedes reemplazar este link por el de tu propia imagen si deseas
       const imageUrl = 'https://i.imgur.com/iAJd5IU.jpeg';
 
       textureLoader.load(imageUrl, (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace;
 
-        // Ajustar el mapeo para recortar estilo "cover" (evita que la foto se deforme)
         const imageAspect = texture.image.width / texture.image.height;
         if (imageAspect > 1) {
           texture.repeat.set(1 / imageAspect, 1);
@@ -251,7 +249,7 @@
           texture.offset.set(0, (1 - imageAspect) / 2);
         }
 
-        const radius = 3.3; // Tamaño ajustado para encajar justo dentro del corazón
+        const radius = 3.3;
         const geometry = new THREE.CircleGeometry(radius, 64);
         const material = new THREE.MeshBasicMaterial({ 
           map: texture, 
@@ -259,11 +257,9 @@
         });
 
         photoMesh = new THREE.Mesh(geometry, material);
-        // Centrado exacto en el punto medio del corazón geométrico
         photoMesh.position.set(0, 0.4, 0.1); 
         scene.add(photoMesh);
 
-        // Anillo Dorado que sirve de marco elegante
         const ringGeo = new THREE.RingGeometry(radius, radius + 0.25, 64);
         const ringMat = new THREE.MeshBasicMaterial({ color: 0xffd700, side: THREE.DoubleSide });
         const ringMesh = new THREE.Mesh(ringGeo, ringMat);
@@ -456,6 +452,9 @@
     }
 
     function onPointerDown(event) {
+      // Fuerza la reproducción en cualquier toque/clic si Chrome bloqueó el audio inicialmente
+      playAudio();
+
       if (document.getElementById('card-modal').style.display === 'block') return;
 
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -519,14 +518,17 @@
     const closeBtn = document.getElementById('close-btn');
     const bgMusic = document.getElementById('bg-music');
 
+    function playAudio() {
+      if (bgMusic && bgMusic.paused) {
+        bgMusic.play().catch(err => console.log("Esperando interacción para audio:", err));
+      }
+    }
+
     function handleStart(e) {
       if (e) e.preventDefault();
       instructionBtn.style.display = 'none';
       modal.style.display = 'block';
-
-      if (bgMusic) {
-        bgMusic.play().catch(err => console.log("Audio:", err));
-      }
+      playAudio();
     }
 
     instructionBtn.addEventListener('click', handleStart);
